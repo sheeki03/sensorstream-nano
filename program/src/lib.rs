@@ -6,7 +6,7 @@ pub mod error;
 use state::*;
 use error::SensorStreamError;
 
-declare_id!("sensorstream111111111111111111111111111111111");
+declare_id!("G4SF8VvsrnNaGuwsh8u1PzeGKCDsNdwg3eB68KqX593X");
 
 #[program]
 pub mod sensorstream {
@@ -19,16 +19,16 @@ pub mod sensorstream {
     ) -> Result<()> {
         let buffer = &mut ctx.accounts.buffer;
 
-        // TODO: Replay protection: Reject if timestamp <= last stored timestamp
-        // Hint: Use buffer.idx to locate the last written reading in the circular buffer
-        // If stale, return Err(SensorStreamError::StaleTimestamp.into());
+        require!(
+            timestamp > buffer.last_timestamp,
+            SensorStreamError::StaleTimestamp
+        );
 
-        // Write reading into circular buffer
         let idx = buffer.idx as usize;
         buffer.readings[idx] = Reading { value, timestamp };
-        buffer.idx = (buffer.idx + 1) % buffer.readings.len() as u8;
+        buffer.idx = (buffer.idx + 1) % 8;
+        buffer.last_timestamp = timestamp;
 
-        // Emit event
         emit!(ReadingSubmitted {
             bot: ctx.accounts.bot.key(),
             value,
@@ -46,9 +46,7 @@ pub struct SubmitReading<'info> {
     #[account(
         mut,
         seeds = [b"sensor", bot.key().as_ref()],
-        bump,
-        payer = bot,
-        space = 8 + SensorBuffer::SIZE
+        bump
     )]
     pub buffer: Account<'info, SensorBuffer>,
     pub system_program: Program<'info, System>,

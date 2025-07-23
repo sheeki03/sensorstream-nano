@@ -10,4 +10,4 @@ crate-type = ["cdylib", "lib"]
 no-entrypoint = []
 
 [dependencies]
-anchor-lang = "0.30.0"
+anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
