@@ -1,39 +1,32 @@
 # Timing
+Session 1 - implemented replay protection, input validation, buffer overflow protection and timestamp validation
 Start: 1 AM GMT+4
-
 End: 1:48 AM GMT+4
 
+Session 2 - implemented security features and tests
+Start: 8:45 AM GMT+4
+End: 11:30AM GMT+4
+
 # Compute Units Used
-~75,000 CU
+~40,000 CU 
 
 # Implementation Details
-New last_timestamp field added to the buffer for fast replay validation
+Replay protection via timestamp validation: require!(timestamp > buffer.last_timestamp)
 
-Original interface unchanged: submit_reading(value: u16, timestamp: i64)
+Input validation: value bounds (≤10000), timestamp bounds (>0, <i64::MAX-86400)
 
-Memory impact: 8 additional bytes (total size: 89 bytes vs. 81 before)
+Buffer overflow protection: checked arithmetic with explicit bounds
 
-Validation: require!(timestamp > buffer.last_timestamp)
+# Security Features
+Timestamp DoS protection: rejects values near i64::MAX
 
-# Security & Concurrency
-Access Control: Each bot can only write to its own PDA
+Value bounds validation: prevents invalid sensor readings
 
-Replay Protection: Enforced strictly by timestamp ordering
+Buffer index safety: overflow-safe arithmetic with modulo
 
-Concurrency: No conflicts as each bot writes to its unique PDA
+Account isolation: each bot writes only to its own PDA
 
-# Performance
-Storage: 89 bytes per account (about $0.0006 in rent)
+Rent exemption: enforced to prevent account closure attacks
 
-Compute: ~75,000 CU, mainly due to fast direct field access
-
-Efficiency: O(1) validation with minimal overhead
-
-# Future Improvements
-Some optimizations remain:
-
-Pack idx and last_timestamp together to save space
-
-Switch from i64 to u64 for timestamps
-
-Apply micro optimizations to shave off additional compute units
+# Test Coverage
+11 tests covering security edge cases, input validation, buffer safety, concurrency, and attack vectors

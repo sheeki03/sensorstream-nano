@@ -3,3 +3,14 @@
 .DS_Store
 .anchor
 **/*.log
+
+# Solana test ledger (RocksDB files)
+test-ledger/
+validator.pid
+
+# RocksDB files (anywhere)
+**/*.sst
+**/CURRENT
+**/MANIFEST-*
+**/OPTIONS-*
+**/rocksdb/

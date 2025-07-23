@@ -19,14 +19,18 @@ pub mod sensorstream {
     ) -> Result<()> {
         let buffer = &mut ctx.accounts.buffer;
 
-        require!(
-            timestamp > buffer.last_timestamp,
-            SensorStreamError::StaleTimestamp
-        );
+        require!(timestamp > 0, SensorStreamError::InvalidTimestamp);
+        require!(timestamp > buffer.last_timestamp, SensorStreamError::StaleTimestamp);
+        require!(timestamp < i64::MAX - 86400, SensorStreamError::InvalidTimestamp);
+        require!(value <= 10000, SensorStreamError::InvalidValue);
 
-        let idx = buffer.idx as usize;
+        let idx = (buffer.idx as usize) % 8;
         buffer.readings[idx] = Reading { value, timestamp };
-        buffer.idx = (buffer.idx + 1) % 8;
+        
+        let new_idx = buffer.idx.checked_add(1)
+            .ok_or(SensorStreamError::BufferOverflow)?
+            % 8;
+        buffer.idx = new_idx;
         buffer.last_timestamp = timestamp;
 
         emit!(ReadingSubmitted {
@@ -44,9 +48,12 @@ pub struct SubmitReading<'info> {
     #[account(mut, signer)]
     pub bot: Signer<'info>,
     #[account(
-        mut,
+        init_if_needed,
+        payer = bot,
+        space = 8 + SensorBuffer::SIZE,
         seeds = [b"sensor", bot.key().as_ref()],
-        bump
+        bump,
+        rent_exempt = enforce
     )]
     pub buffer: Account<'info, SensorBuffer>,
     pub system_program: Program<'info, System>,

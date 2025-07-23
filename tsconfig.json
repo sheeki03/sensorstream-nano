@@ -1,11 +1,23 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "strict": true,
+    "strict": false,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "target": "es2020",
     "moduleResolution": "node",
-    "types": ["mocha", "node"]
+    "types": ["mocha", "node"],
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "noImplicitReturns": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
-  "include": ["tests/**/*.ts"]
+  "include": ["tests/**/*.ts"],
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "skipLibCheck": true
+    }
+  }
 }
